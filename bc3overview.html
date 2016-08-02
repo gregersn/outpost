@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<!--[if lte IE 6]><html class="preIE7 preIE8 preIE9"><![endif]-->
+<!--[if IE 7]><html class="preIE8 preIE9"><![endif]-->
+<!--[if IE 8]><html class="preIE9"><![endif]-->
+<!--[if gte IE 9]><!--><html><!--<![endif]-->
+  <head>
+    <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>Basecamp overview</title>
+  <meta name="author" content="name">
+  <meta name="description" content="description here">
+  <meta name="keywords" content="keywords,here">
+  <style type="text/css">
+   
+  </style>
+  </head>
+  <body>
+
+  <h2>People</h2>
+  <ul class="people">
+  </ul>
+
+  <h2>Projects</h2>
+  <ul class="projects">
+  </ul>
+
+  <script type="text/javascript">
+      let apiurl = '/get/';
+      let projects = 'projects.json';
+      let people = 'people.json';
+
+      let peopleData = null;
+      let projectData = null;
+
+    // 1. Get all users, and list them
+    // 2. Get all projects/basecamps
+    // 3. For each project, get all people on a project/basecamp.
+    // 4. For each person on a project, add the project to the person
+
+    function showUsers(data) {
+      let peopleElement = document.body.getElementsByClassName('people')[0];
+      for(let i = 0; i < data.length; i++) {
+        if(data[i].personable_type === "DummyUser") { continue; };
+        let personElement = document.createElement('li');
+        let personProjects = document.createElement('ul');
+        personProjects.className = 'personProjects';
+
+        personElement.className = 'user';
+        personElement.innerHTML = data[i].name;
+        personElement.id = data[i].id;
+        personElement.appendChild(personProjects);
+        peopleElement.appendChild(personElement);
+      }
+    }
+
+    function addProjectToUser(userprojectdata, project) {
+      for(let i = 0; i < userprojectdata.length; i++) {
+        let person = userprojectdata[i];
+        let personElement = document.getElementById(person.id);
+        let projectList = personElement.getElementsByClassName('personProjects')[0];
+        let projectElement = document.createElement('li');
+        projectElement.id = project.id;
+        projectElement.className = 'project';
+        projectElement.innerHTML = project.name;
+        projectList.appendChild(projectElement);
+      }
+    }
+
+    function showProjects(data) {
+      let projectsElement = document.body.getElementsByClassName('projects')[0];
+      for(let i = 0; i < data.length; i++) {
+        let projectElement = document.createElement('li');
+        projectElement.className = 'project';
+        projectElement.id = data[i].id;
+        projectElement.innerHTML = data[i].name;
+        projectsElement.appendChild(projectElement);
+      }
+    }
+
+    function get_project_people(data) {
+      for(let i = 0; i < data.length; i++) {
+        let project = data[i];
+        let request = new XMLHttpRequest();
+        request.abort();
+        request.onreadystatechange = function() {
+          if(request.readyState === 4 && request.status === 200) {
+            projectpeople = JSON.parse(request.response);
+            addProjectToUser(projectpeople, project);
+          }
+        };
+        request.open('GET', apiurl + 'projects/' + project.id + '/' + people);
+        request.send(null);
+      }
+    }
+
+    function get_users() {
+      let request = new XMLHttpRequest();
+      request.abort()
+      request.onreadystatechange = function() {
+        if(request.readyState == 4 && request.status == 200) {
+            peopleData = JSON.parse(request.response);
+            showUsers(peopleData);
+          }
+      };
+      request.open('GET', apiurl + people);
+      request.send(null);
+    }
+
+    function get_projects() {
+      let request = new XMLHttpRequest();
+      request.abort();
+      request.onreadystatechange = function() {
+        if(request.readyState === 4 && request.status === 200) {
+          projectData = JSON.parse(request.response);
+          showProjects(projectData);
+          get_project_people(projectData);
+        }
+      };
+
+      request.open('GET', apiurl + projects);
+      request.send();
+    }
+
+   function autorun()
+   {
+    get_users();
+    get_projects();
+   }
+
+
+   if (window.addEventListener) window.addEventListener("load", autorun, false);
+   else if (window.attachEvent) window.attachEvent("onload", autorun);
+   else window.onload = autorun;
+  </script>
+  </body>
+</html>
