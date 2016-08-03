@@ -16,7 +16,7 @@ import webbrowser
 from cacher import Cache
 
 try:
-    import settings_local
+    import settings_local as settings
 except ImportError:
     import settings
 
